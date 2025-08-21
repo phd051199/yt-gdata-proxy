@@ -30,6 +30,6 @@ COPY --from=builder /app/proxy-server .
 COPY --chmod=400 key.pem /ssh/key.pem
 COPY --chmod=755 entrypoint.sh /entrypoint.sh
 
-EXPOSE 3000
+EXPOSE 10000
 
 ENTRYPOINT ["/entrypoint.sh"]
