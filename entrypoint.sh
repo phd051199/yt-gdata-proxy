@@ -14,7 +14,7 @@ trap cleanup TERM INT
 
 maintain_ssh_tunnel() {
     while true; do
-        ssh -i /ssh/key.pem -R 3000:localhost:3000 nglocalhost.com &
+        ssh -i /ssh/key.pem -N -R 3001:localhost:3000 nglocalhost.com &
         SSH_PID=$!
         wait $SSH_PID
         sleep 5
