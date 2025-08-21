@@ -26,14 +26,8 @@ maintain_ssh_tunnel() {
     while true; do
         echo "Establishing SSH tunnel..."
         sleep 5
-        
-    
-        ssh -i /ssh/key.pem \
-            -R 3000:localhost:3000 \
-            -o ServerAliveInterval=30 \
-            -o ServerAliveCountMax=3 \
-            -o ExitOnForwardFailure=yes \
-            nglocalhost.com &
+
+        ssh -i /ssh/key.pem -R 3000:localhost:3000 nglocalhost.com &
         
         SSH_PID=$!
         echo "SSH tunnel started with PID: $SSH_PID"
