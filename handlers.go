@@ -8,16 +8,11 @@ import (
 )
 
 const (
-	statusOk         = "status=ok"
-	fwdDomain        = "s60tube.io.vn"
-	youtubeHost      = "www.youtube.com"
-	gdataHost        = "gdata.youtube.com"
-	getVideoInfoPath = "/get_video_info"
-	getVideoPath     = "/get_video"
+	fwdDomain = "s60tube.io.vn"
 )
 
 var (
-	ok  = []byte(statusOk)
+	ok  = []byte("status=ok")
 	fwd = &httputil.ReverseProxy{
 		Director: func(r *http.Request) {},
 		ErrorHandler: func(w http.ResponseWriter, r *http.Request, err error) {
@@ -33,16 +28,17 @@ func proxy(w http.ResponseWriter, req *http.Request) {
 	path := req.URL.Path
 
 	switch host {
-	case youtubeHost:
+	case "www.youtube.com":
 		switch path {
-		case getVideoInfoPath:
+		case "/get_video_info":
 			w.Write(ok)
 			return
-		case getVideoPath:
+		case "/get_video":
 			http.Redirect(w, req, "http://"+fwdDomain+"/videoplayback?v="+req.URL.Query().Get("video_id"), http.StatusFound)
 			return
 		}
-	case gdataHost:
+	case "gdata.youtube.com":
+		req.Header.Add("X-Forwarded-For", req.RemoteAddr)
 		req.Host = fwdDomain
 		req.URL.Host = fwdDomain
 		fwd.ServeHTTP(w, req)

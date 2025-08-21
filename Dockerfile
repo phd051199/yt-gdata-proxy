@@ -1,4 +1,3 @@
-# stage 1
 FROM golang:1.25.0-alpine AS builder
 
 WORKDIR /app
@@ -13,7 +12,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -trimpath \
     -o proxy-server .
 
-# stage 2
+#
 FROM alpine:latest
 
 RUN apk add --no-cache openssh-client
