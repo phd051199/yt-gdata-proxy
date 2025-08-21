@@ -1,52 +1,34 @@
+# stage 1
 FROM golang:1.25.0-alpine AS builder
-
-RUN apk add --no-cache git
 
 WORKDIR /app
 
 COPY go.mod go.sum ./
-
 RUN go mod download
 
 COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags='-w -s -extldflags "-static"' \
-    -a -installsuffix cgo \
+    -trimpath \
     -o proxy-server .
 
+# stage 2
 FROM alpine:latest
 
-RUN apk add --no-cache \
-    openssh-client \
-    ca-certificates \
-    tzdata
+RUN apk add --no-cache openssh-client
 
-RUN adduser -D -s /bin/sh appuser
+RUN mkdir -p /root/.ssh && \
+    echo "StrictHostKeyChecking no" > /root/.ssh/config && \
+    echo "UserKnownHostsFile /dev/null" >> /root/.ssh/config && \
+    chmod 700 /root/.ssh && \
+    chmod 600 /root/.ssh/config
 
 WORKDIR /app
 
 COPY --from=builder /app/proxy-server .
-
-RUN mkdir -p /ssh
-COPY key.pem /ssh/key.pem
-RUN chmod 400 /ssh/key.pem && \
-    chown appuser:appuser /ssh/key.pem
-
-RUN mkdir -p /home/appuser/.ssh && \
-    echo "StrictHostKeyChecking no" >> /home/appuser/.ssh/config && \
-    echo "UserKnownHostsFile /dev/null" >> /home/appuser/.ssh/config && \
-    chown -R appuser:appuser /home/appuser/.ssh && \
-    chmod 700 /home/appuser/.ssh && \
-    chmod 600 /home/appuser/.ssh/config
-
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh && \
-    chown appuser:appuser /entrypoint.sh
-
-RUN chown -R appuser:appuser /app
-
-USER appuser
+COPY --chmod=400 key.pem /ssh/key.pem
+COPY --chmod=755 entrypoint.sh /entrypoint.sh
 
 EXPOSE 3000
 
