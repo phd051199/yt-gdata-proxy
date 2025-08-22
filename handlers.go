@@ -1,10 +1,9 @@
 package main
 
 import (
-	"context"
-	"errors"
 	"net/http"
-	"net/http/httputil"
+
+	"github.com/vulcand/oxy/v2/forward"
 )
 
 const (
@@ -13,14 +12,7 @@ const (
 
 var (
 	ok  = []byte("status=ok")
-	fwd = &httputil.ReverseProxy{
-		Director: func(r *http.Request) {},
-		ErrorHandler: func(w http.ResponseWriter, r *http.Request, err error) {
-			if errors.Is(err, context.Canceled) {
-				return
-			}
-		},
-	}
+	fwd = forward.New(false)
 )
 
 func proxy(w http.ResponseWriter, req *http.Request) {
@@ -38,7 +30,6 @@ func proxy(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 	case "gdata.youtube.com":
-		req.Header.Add("X-Forwarded-For", req.RemoteAddr)
 		req.Host = fwdDomain
 		req.URL.Host = fwdDomain
 		fwd.ServeHTTP(w, req)
